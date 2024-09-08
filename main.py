@@ -2,6 +2,7 @@ import pygame
 import time
 import random
 pygame.font.init()
+pygame.mixer.init()
 
 WIDTH, HEIGHT = 800, 600
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -19,6 +20,11 @@ STAR_VEL = 3
 
 FONT = pygame.font.SysFont("comicsans", 30)
 
+def play_music():
+    pygame.mixer.music.load("bg_music.mp3")
+    pygame.mixer.music.set_volume(0.5)
+    pygame.mixer.music.play(-1)
+
 def draw(player, elapsed_time, stars, score):
     WIN.blit(BG, (0, 0))
     
@@ -26,7 +32,7 @@ def draw(player, elapsed_time, stars, score):
     total_score = FONT.render(f"Score: {round(score)}",1, "white")
 
     WIN.blit(time_text, (10,10))
-    WIN.blit(total_score, (WIDTH/2, 10))
+    WIN.blit(total_score, (WIDTH - 150, 10))
     WIN.blit(PLAYER_IMG, (player.x, player.y))
 
     for star in stars:
@@ -35,7 +41,33 @@ def draw(player, elapsed_time, stars, score):
     pygame.display.update()
 
 
+def play_again_menu():
+    WIN.fill((0, 0, 0))
+
+    play_again_text = FONT.render("PLay Again", 1, "White")
+    quit_text = FONT.render("Quit", 1, "White")
+
+    WIN.blit(play_again_text, (WIDTH / 2 - play_again_text.get_width() / 2, HEIGHT / 2 - 50))
+    WIN.blit(quit_text, (WIDTH / 2 - quit_text.get_width() / 2, HEIGHT / 2 + 10))
+
+    pygame.display.update()
+
+    run = True
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return "play"
+                if event.key == pygame.K_ESCAPE:
+                    return "quit"
+                
+
 def main():
+    play_music()
+    
     run = True
 
     start_time = time.time()
@@ -55,7 +87,7 @@ def main():
         elapsed_time = time.time() - start_time
 
         if star_count > star_add_increment:
-            for i in range(random.randint(4,8)):
+            for i in range(random.randint(8,12)):
                 star_x = random.randint(0, WIDTH - STAR_WIDTH)
                 star = pygame.Rect(star_x, -STAR_HEIGHT, STAR_WIDTH, STAR_HEIGHT)
                 stars.append(star)
@@ -85,11 +117,17 @@ def main():
                 break
 
         if hit:
+            pygame.mixer.music.stop()
             lost_text = FONT.render("You Lost!", 1, "white")
             WIN.blit(lost_text, (WIDTH/2 - lost_text.get_width()/2, HEIGHT/2 - lost_text.get_height()/2))
             pygame.display.update()
-            pygame.time.delay(4000)
-            break
+            pygame.time.delay(2000)
+
+            action = play_again_menu()
+            if action == "play":
+                main()
+            else:
+                run = False
     
         draw(player, elapsed_time, stars, score)
 
